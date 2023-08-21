@@ -13,7 +13,8 @@ export class ProductController {
   public getProducts = async (req: Request, res: Response) => {
     try {
       const input = GetProductsSchema.parse({
-        q: req.query.q
+        q: req.query.q,
+        token: req.headers.authorization
       })
 
       const output = await this.productBusiness.getProducts(input)
@@ -38,7 +39,8 @@ export class ProductController {
       const input = CreateProductSchema.parse({
         // id: req.body.id,
         name: req.body.name,
-        price: req.body.price
+        price: req.body.price,
+        token: req.headers.authorization
       })
 
       const output = await this.productBusiness.createProduct(input)

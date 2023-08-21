@@ -3,18 +3,26 @@ import { CreateProductInputDTO, CreateProductOutputDTO } from "../dtos/product/c
 import { GetProductsInputDTO, GetProductsOutputDTO } from "../dtos/product/getProducts.dto"
 import { BadRequestError } from "../errors/BadRequestError"
 import { Product } from "../models/Product"
+import { USER_ROLES } from "../models/User"
 import { IdGenerator } from "../services/IdGenerator"
+import { TokenManager } from "../services/TokenManager"
 
 export class ProductBusiness {
   constructor(
     private productDatabase: ProductDatabase,
-    private idGenerator: IdGenerator
+    private idGenerator: IdGenerator,
+    private tokenManager: TokenManager
   ) { }
 
   public getProducts = async (
     input: GetProductsInputDTO
   ): Promise<GetProductsOutputDTO> => {
-    const { q } = input
+    const { q, token } = input
+    const payload =  this.tokenManager.getPayload(token)
+
+    if(!payload) {
+      throw new BadRequestError("token invalido")
+    }
 
     const productsDB = await this.productDatabase.findProducts(q)
 
@@ -38,7 +46,17 @@ export class ProductBusiness {
     input: CreateProductInputDTO
   ): Promise<CreateProductOutputDTO> => {
     // const { id, name, price } = input
-    const { name, price } = input
+    const { name, price , token} = input
+    const payload =  this.tokenManager.getPayload(token)
+    
+
+    if(!payload) {
+      throw new BadRequestError("token invalido")
+    }
+
+    if( payload?.role !== USER_ROLES.ADMIN ) {
+      throw new BadRequestError("só admin pode acessar")
+    }
 
     // const productDBExists = await this.productDatabase.findProductById(id)
 
